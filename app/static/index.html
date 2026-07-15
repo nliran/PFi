@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PFi — Portfolio</title>
+  <link rel="stylesheet" href="styles.css">
+  <script>
+    // Apply the saved theme before first paint to avoid a flash.
+    (function () {
+      try {
+        var t = localStorage.getItem("pfi-theme");
+        if (!t) t = (window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches) ? "light" : "dark";
+        document.documentElement.setAttribute("data-theme", t);
+        // Apply privacy ("hide values") before first paint so values never flash.
+        var p = localStorage.getItem("pfi-privacy");
+        document.documentElement.setAttribute("data-privacy", p === "on" ? "on" : "off");
+      } catch (e) {}
+    })();
+    // On-screen error reporter (module errors otherwise fail silently).
+    window.addEventListener("error", function (e) {
+      var m = document.getElementById("main");
+      if (m && m.children.length === 0) m.innerHTML =
+        '<pre style="color:#f85149;padding:24px;white-space:pre-wrap;font-size:13px">JS ERROR\n' +
+        (e.message || "") + "\n" + (e.filename || "").split("/").pop() + ":" + e.lineno + ":" + e.colno + "</pre>";
+    });
+  </script>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">P<span>Fi</span></div>
+      <nav class="nav" id="nav">
+        <button data-view="dashboard" class="active">Dashboard</button>
+        <button data-view="trends">Trends</button>
+        <button data-view="snapshots">Monthly Entry</button>
+        <button data-view="accounts">Accounts</button>
+        <button data-view="ledgers">Ledgers</button>
+        <button data-view="howto">How-To</button>
+      </nav>
+      <div class="topbar-right">
+        <button class="link" id="aboutBtn">About</button>
+        <span class="ver" id="appVer"></span>
+        <button class="icon-toggle" id="privacyToggle" role="switch" aria-checked="false" aria-label="Hide values for screenshots" title="Hide values for screenshots">
+          <svg class="ic ic-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+          <svg class="ic ic-eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+        </button>
+        <button class="theme-switch" id="themeToggle" role="switch" aria-label="Toggle light/dark theme" title="Toggle theme">
+          <span class="ts-icon ts-sun">☀</span>
+          <span class="ts-icon ts-moon">☾</span>
+          <span class="ts-knob"></span>
+        </button>
+        <button class="icon-toggle quit-btn" id="quitBtn" aria-label="Quit PFi (stop the server)" title="Quit PFi (stop the server)">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg>
+        </button>
+      </div>
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </header>
+    <main class="main" id="main"></main>
+  </div>
+  <div class="chart-tip" id="tip"></div>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

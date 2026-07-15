@@ -1,0 +1,32 @@
+# === Private financial data — never commit ===
+# Local financial database (real balances)
+data/
+*.db
+*.db.backup*
+# Source Numbers workbook (full financial history)
+*.numbers
+# Personal migration script, tailored to the real workbook.
+# Others should copy app/import_numbers.example.py -> app/import_numbers.py.
+app/import_numbers.py
+
+# Self-signed TLS material — never commit private keys
+app/certs/
+
+# Built/shareable app bundles (regenerate with build-app.sh)
+*.app.zip
+*.app/
+
+# Files from an unrelated project that live alongside this one
+/index.html
+/site/
+/embeds/
+/long-pond-july4.zip
+
+# Machine-local editor/tooling state
+.claude/settings.local.json
+.DS_Store
+*.log
+
+# Python noise
+__pycache__/
+*.pyc
