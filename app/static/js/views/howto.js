@@ -7,7 +7,7 @@
 
 const main = document.getElementById("main");
 
-const GUIDE_REVISED = "June 2026 (rev 7)";
+const GUIDE_REVISED = "July 2026 (rev 8)";
 
 export async function viewHowto() {
   main.innerHTML = `
@@ -143,6 +143,15 @@ export async function viewHowto() {
             <li><b>About</b> — opens a panel listing the independent version
               number of each module (App, UI, API, Database, Importer).</li>
             <li><b>Version</b> — the current app version, shown next to About.</li>
+            <li><b>Update (↑ pill)</b> — appears next to the version only when a
+              newer PFi version has been published. Click it (or <b>Check for
+              updates</b> in the About panel) to review what's available and
+              update in one click: PFi pulls the newest code from GitHub and
+              restarts itself. If you launched from the <b>PFi</b> app icon it
+              also rebuilds the app. Your data is never touched, and reading the
+              update needs no login. Updating needs a clean checkout — if you've
+              made local code edits in <code>~/PFi</code>, commit or stash them
+              first.</li>
             <li><b>Privacy toggle (eye icon)</b> — hides every dollar value on
               screen so you can screenshot the UI without revealing balances.
               Click to blur HTML numbers and mask chart axis / donut numbers

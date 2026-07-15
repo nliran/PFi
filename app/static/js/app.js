@@ -2,6 +2,7 @@
 // the About panel, then renders the selected view. ES modules keep each concern
 // in its own scope (no shared globals).
 import { api } from "./api.js";
+import { esc } from "./format.js";
 import { UI_VERSION } from "./version.js";
 import { initTheme, toggleTheme, getTheme, onThemeChange } from "./theme.js";
 import { initPrivacy, togglePrivacy, getPrivacy } from "./privacy.js";
@@ -151,6 +152,124 @@ function showStopped() {
     '</div>';
 }
 
+// ---- Software update: check GitHub for newer code, one-click pull + restart.
+const updateBtn = document.getElementById("updateBtn");
+let lastUpdate = null; // cache of the most recent /api/update result
+
+function reflectUpdate(info) {
+  lastUpdate = info || null;
+  if (info && info.update_available) {
+    updateBtn.textContent = "↑ Update" + (info.latest ? " to v" + info.latest : "");
+    updateBtn.hidden = false;
+    updateBtn.title = info.can_update
+      ? "A newer version of PFi is available — click to update"
+      : (info.message || "An update is available");
+  } else {
+    updateBtn.hidden = true;
+  }
+}
+
+async function checkForUpdates() {
+  try {
+    const info = await api.get("/update");
+    reflectUpdate(info);
+    return info;
+  } catch (e) {
+    return null; // offline / not a git install — stay quiet
+  }
+}
+
+updateBtn.addEventListener("click", () => openUpdate(lastUpdate));
+
+function openUpdate(info) {
+  info = info || lastUpdate || {};
+  const bundle = info.kind === "bundle";
+  const canUpdate = !!info.can_update;
+  const avail = !!info.update_available;
+  const body = avail
+    ? `<p>A newer version of PFi is available.</p>
+       <table class="about-table"><tbody>
+         <tr><td>You have</td><td class="num mono">v${esc(info.current || "—")}</td></tr>
+         <tr><td>Latest</td><td class="num mono">v${esc(info.latest || "—")}</td></tr>
+       </tbody></table>
+       <p class="muted">PFi will pull the newest code from GitHub${bundle ? ", rebuild the app," : ""} and restart itself. Your data isn't touched.</p>
+       ${canUpdate ? "" : `<p class="upd-warn">${esc(info.message || "This copy can't self-update.")}</p>`}`
+    : `<p>${esc(info.message || "You're on the latest version.")}</p>`;
+  let host = document.getElementById("updateModal");
+  if (!host) { host = document.createElement("div"); host.id = "updateModal"; document.body.appendChild(host); }
+  host.innerHTML = `
+    <div class="modal-overlay" id="updOv">
+      <div class="modal" style="max-width:440px">
+        <div class="modal-head"><h2>Software update</h2><button class="icon" id="updX">✕</button></div>
+        <div class="about-body" id="updBody">
+          ${body}
+          <div class="modal-actions">
+            <button class="btn ghost" id="updCancel">Close</button>
+            ${avail && canUpdate ? `<button class="btn" id="updGo">Update now</button>` : ""}
+          </div>
+        </div>
+      </div>
+    </div>`;
+  const close = () => { host.innerHTML = ""; };
+  document.getElementById("updX").addEventListener("click", close);
+  document.getElementById("updCancel").addEventListener("click", close);
+  document.getElementById("updOv").addEventListener("click", (e) => { if (e.target.id === "updOv") close(); });
+  const go = document.getElementById("updGo");
+  if (go) go.addEventListener("click", () => runUpdate(host));
+}
+
+async function runUpdate(host) {
+  const body = host.querySelector("#updBody");
+  const bundle = lastUpdate && lastUpdate.kind === "bundle";
+  body.innerHTML = `<p class="upd-progress"><span class="spinner"></span> Applying update… PFi is restarting${bundle ? " and rebuilding the app" : ""}. This can take a moment.</p>`;
+  let res;
+  try { res = await api.post("/update/apply", {}); }
+  catch (e) { res = { ok: false, message: "The update request failed to send." }; }
+
+  if (!res || !res.ok) {
+    body.innerHTML = `<p class="upd-warn">Update failed.</p><p class="muted">${esc((res && res.message) || "Unknown error.")}</p>
+      <div class="modal-actions"><button class="btn ghost" id="updDone">Close</button></div>`;
+    body.querySelector("#updDone").addEventListener("click", () => { host.innerHTML = ""; });
+    return;
+  }
+  if (res.noop) {
+    reflectUpdate({ update_available: false });
+    body.innerHTML = `<p>${esc(res.message || "Already up to date.")}</p>
+      <div class="modal-actions"><button class="btn ghost" id="updDone">Close</button></div>`;
+    body.querySelector("#updDone").addEventListener("click", () => { host.innerHTML = ""; });
+    return;
+  }
+  // Success: the server is restarting. Wait for it to answer again, then reload.
+  const back = await waitForServer(res.to);
+  if (back) {
+    body.innerHTML = `<p class="upd-ok">✓ Updated to v${esc(res.to || "")}. Reloading…</p>`;
+    setTimeout(() => location.reload(), 800);
+  } else {
+    body.innerHTML = `<p class="upd-warn">Update applied, but the server hasn't come back yet.</p>
+      <p class="muted">Give it a moment, then reload the page.</p>
+      <div class="modal-actions"><button class="btn" id="updReload">Reload</button></div>`;
+    body.querySelector("#updReload").addEventListener("click", () => location.reload());
+  }
+}
+
+// Poll /api/version until the restarted server responds (optionally on the
+// expected new version). Resolves false after ~90s so we never hang forever.
+function waitForServer(expected) {
+  return new Promise((resolve) => {
+    let n = 0;
+    const tick = async () => {
+      n++;
+      try {
+        const v = await api.get("/version");
+        if (v && v.app && (!expected || v.app === expected)) return resolve(true);
+      } catch (e) { /* still down */ }
+      if (n >= 90) return resolve(false);
+      setTimeout(tick, 1000);
+    };
+    setTimeout(tick, 1200); // let the old listener drop first
+  });
+}
+
 // ---- About panel: per-module versions
 async function openAbout() {
   let backend = {};
@@ -178,12 +297,33 @@ async function openAbout() {
         <div class="about-body">
           <p class="muted">Local, private portfolio tracker. Each module is versioned independently.</p>
           <table class="about-table"><tbody>${rows}</tbody></table>
+          <div class="about-update">
+            <button class="btn ghost sm" id="aboutCheck">Check for updates</button>
+            <span class="upd-status muted" id="aboutUpdStatus"></span>
+          </div>
         </div>
       </div>
     </div>`;
   const close = () => { host.innerHTML = ""; };
   document.getElementById("aboutClose").addEventListener("click", close);
   document.getElementById("aboutOv").addEventListener("click", (e) => { if (e.target.id === "aboutOv") close(); });
+  // Updates row: check on demand, then hand off to the update dialog.
+  const checkBtn = document.getElementById("aboutCheck");
+  const status = document.getElementById("aboutUpdStatus");
+  checkBtn.addEventListener("click", async () => {
+    checkBtn.disabled = true;
+    status.textContent = "Checking…";
+    const info = await checkForUpdates();
+    checkBtn.disabled = false;
+    if (!info) { status.textContent = "Couldn't reach GitHub."; return; }
+    if (info.update_available) {
+      status.textContent = "";
+      close();
+      openUpdate(info);
+    } else {
+      status.textContent = info.message || "You're on the latest version.";
+    }
+  });
 }
 
 // Populate the footer version string up front.
@@ -194,3 +334,7 @@ api.get("/version").then((v) => {
 });
 
 render();
+
+// Quietly ask the server whether newer code is published; reveals the topbar
+// "↑ Update" pill if so. Runs after first paint so it never delays the UI.
+checkForUpdates();

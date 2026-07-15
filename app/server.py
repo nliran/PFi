@@ -31,8 +31,10 @@ import os
 import socket
 import ssl
 import subprocess
+import sys
 import tempfile
 import threading
+import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse
 
@@ -145,6 +147,28 @@ class Handler(BaseHTTPRequestHandler):
             self._send_json({"ok": True, "message": "PFi is shutting down."})
             threading.Thread(target=self.server.shutdown, daemon=True).start()
             return
+        # Self-update: pull the newest published code (and rebuild the .app when
+        # running the packaged bundle), reply, then restart THIS process in place
+        # so the new code loads. Restart is special-cased here (not a route) for
+        # the same reason as shutdown -- it needs the server handle.
+        if method == "POST" and path == "/api/update/apply":
+            import update as _upd
+            result = _upd.apply_update()
+            self._send_json(result)
+            if result.get("ok") and not result.get("noop"):
+                # Flag a restart, then stop serve_forever() from a separate
+                # thread (never its own loop). main() does the execv AFTER the
+                # loop returns, so the restart is deterministic (no race with
+                # process exit) and happens on the main thread.
+                server = self.server
+
+                def _signal_restart():
+                    time.sleep(0.4)  # let this JSON reply reach the browser
+                    server._pfi_restart = True
+                    server.shutdown()
+
+                threading.Thread(target=_signal_restart, daemon=True).start()
+            return
         if not path.startswith("/api/"):
             if method == "GET":
                 return self._serve_static(path)
@@ -240,12 +264,30 @@ def main():
             if ip != "127.0.0.1":
                 print(f"  LAN: {scheme}://{ip}:{PORT}")
     try:
-        srv.serve_forever()  # returns when /api/shutdown calls srv.shutdown()
+        srv.serve_forever()  # returns when /api/shutdown or a self-update stops it
     except KeyboardInterrupt:
         pass
     finally:
         srv.server_close()
-        print("\nstopped")
+    # A self-update sets this flag before stopping the server. Re-exec the same
+    # interpreter + argv so the freshly pulled code loads on the same port
+    # (server_close() freed the socket; SO_REUSEADDR makes the rebind immediate).
+    if getattr(srv, "_pfi_restart", False):
+        try:
+            import update
+            update.purge_bytecode(HERE)  # macOS mirrors .pyc outside the tree; drop stale ones
+        except Exception:
+            pass
+        # A bundle self-rebuild rm -rf's and recreates this directory, which can
+        # leave our cwd/relative argv pointing at a deleted inode. Re-chdir to the
+        # recreated dir and re-exec by ABSOLUTE path so the restart is reliable.
+        try:
+            os.chdir(HERE)
+        except Exception:
+            pass
+        print("restarting to apply update...")
+        os.execv(sys.executable, [sys.executable, os.path.join(HERE, "server.py")] + sys.argv[1:])
+    print("\nstopped")
 
 
 if __name__ == "__main__":

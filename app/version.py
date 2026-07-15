@@ -13,11 +13,11 @@ Versioning is independent per module (semver: MAJOR.MINOR.PATCH):
   ui        - frontend SPA (app/static)
 """
 
-APP_VERSION = "1.20.0"
+APP_VERSION = "1.21.0"
 DB_VERSION = "1.7.0"
 IMPORTER_VERSION = "1.0.0"
-API_VERSION = "1.10.1"
-UI_VERSION = "1.19.1"
+API_VERSION = "1.11.0"
+UI_VERSION = "1.20.0"
 
 
 def module_versions():
