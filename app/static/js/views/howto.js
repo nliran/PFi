@@ -7,7 +7,7 @@
 
 const main = document.getElementById("main");
 
-const GUIDE_REVISED = "July 2026 (rev 8)";
+const GUIDE_REVISED = "July 2026 (rev 9)";
 
 export async function viewHowto() {
   main.innerHTML = `
@@ -231,7 +231,9 @@ export async function viewHowto() {
           <h2>Trends</h2>
           <p>Long-run analytical views, all driven by the same monthly snapshots
             and controlled by one shared <b>1Y / 3Y / 5Y / ALL</b> range selector
-            at the top. Every chart has a hover tooltip.</p>
+            at the top. Every chart has a hover tooltip. A <b>Show:</b> row of
+            checkboxes below the range tabs lets you hide any trend you don't want
+            to see; your choices are remembered per browser.</p>
           <ul>
             <li><b>Assets &amp; Debts Over Time</b> — a stacked area chart: Liquid
               and Non-Liquid stacked above the zero line, Debt drawn below it.</li>
@@ -246,6 +248,12 @@ export async function viewHowto() {
             <li><b>Debt Paydown &amp; Real-Estate Equity</b> — total debt,
               mortgages only, and net real-estate equity (property value minus the
               linked mortgage) on one chart.</li>
+            <li><b>Net Worth — Month by Month</b> — a table of every snapshot in the
+              selected range: Liquid, Non-Liquid, Debts, Net Worth, and the
+              month-over-month <b>$ Change</b> and <b>% Change</b> (green up / red
+              down, like the KPI cards). Click any <b>column header</b> to sort by
+              it (click again to reverse); click a <b>row</b> to jump to that month
+              in Monthly Entry.</li>
           </ul>
         </section>
 
