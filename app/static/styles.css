@@ -373,6 +373,20 @@ label.field { display: flex; flex-direction: column; gap: 5px; font-size: 12px; 
 td.num .delta { font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .delta.flat { color: var(--muted); }
 
+/* ---- Trends: show/hide picker + month-by-month table ---- */
+.trend-picker-panel { padding: 12px 16px; }
+.trend-picker { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
+.trend-picker .pick-label { color: var(--muted); font-size: 12.5px; font-weight: 600; }
+.trend-picker .pick { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; color: var(--text); cursor: pointer; user-select: none; }
+.trend-picker .pick input { accent-color: var(--accent); width: 15px; height: 15px; cursor: pointer; }
+.nw-table-wrap { overflow-x: auto; }
+.nw-table { width: 100%; }
+.nw-table th.sortable { cursor: pointer; white-space: nowrap; }
+.nw-table th.sortable:hover { color: var(--accent); }
+.nw-table tbody tr { cursor: pointer; }
+.nw-table tbody tr:hover td { background: var(--bg-elev2); }
+.nw-table .nw-cell { font-weight: 600; color: var(--text); }
+
 /* ---- Accounts list ---- */
 .acct-group { margin-bottom: 18px; }
 .acct-group-head { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin: 0 0 8px; font-weight: 600; }
