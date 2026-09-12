@@ -54,6 +54,10 @@ most last month?") instead of reading charts by hand. Two read-only paths:
 Both are **strictly read-only** — an AI can read and analyze your data, but can
 never change it.
 
+## Changelog
+
+Notable changes are recorded in [`CHANGELOG.md`](CHANGELOG.md).
+
 ## Your data
 
 Everything personal is kept out of version control by `.gitignore`:
