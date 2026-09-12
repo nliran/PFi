@@ -10,6 +10,8 @@ versions it changed.
 
 ## [Unreleased]
 
+## [1.23.0] - 2026-09-12
+
 ### Added
 
 - **Read-only AI access to your portfolio.** Point an AI assistant at a running
@@ -38,6 +40,7 @@ versions it changed.
 
 ### Module versions
 
+- `app` 1.22.0 → 1.23.0
 - `api` 1.11.0 → 1.12.0 (new `/api/export` endpoint)
 
 ## [1.22.0] - 2026-08-02
@@ -87,7 +90,8 @@ versions it changed.
 
 - `app` 1.20.0, `db` 1.7.0, `api` 1.10.1, `ui` 1.19.1, `importer` 1.0.0
 
-[Unreleased]: https://github.com/nliran/PFi/compare/v1.22.0...HEAD
+[Unreleased]: https://github.com/nliran/PFi/compare/v1.23.0...HEAD
+[1.23.0]: https://github.com/nliran/PFi/compare/v1.22.0...v1.23.0
 [1.22.0]: https://github.com/nliran/PFi/compare/v1.21.1...v1.22.0
 [1.21.1]: https://github.com/nliran/PFi/compare/v1.21.0...v1.21.1
 [1.21.0]: https://github.com/nliran/PFi/compare/v1.20.0...v1.21.0
