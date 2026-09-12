@@ -24,6 +24,9 @@ app/certs/
 
 # Machine-local editor/tooling state
 .claude/settings.local.json
+# Local dev-server launch configs (machine-specific paths; also other projects).
+# Kept out of git so local edits never block the in-app self-update.
+.claude/launch.json
 .DS_Store
 *.log
 
