@@ -36,6 +36,28 @@ Other entry points:
   (`build-app.sh --share` also writes a code-only `PFi.app.zip` you can hand to
   someone else)
 
+## Analyze it with an AI (optional)
+
+PFi can be read by an AI assistant so you can ask questions about your portfolio
+in plain language ("how has my allocation drifted since 2020?", "what changed
+most last month?") instead of reading charts by hand. Two read-only paths:
+
+- **`GET /api/export`** — the whole portfolio as one labeled JSON document
+  (net-worth series, latest snapshot, allocation, ledgers, account metadata),
+  designed to be handed straight to a model.
+- **A bundled MCP server** (`mcp/pfi_mcp_server.py`) — connect Claude Desktop,
+  Claude Code, or any [MCP](https://modelcontextprotocol.io) client to a running
+  PFi instance and it gets structured tools (`get_overview`, `get_allocation`,
+  `get_account_history`, `compare_months`, …). Zero dependencies; see
+  [`mcp/README.md`](mcp/README.md) for setup.
+
+Both are **strictly read-only** — an AI can read and analyze your data, but can
+never change it.
+
+## Changelog
+
+Notable changes are recorded in [`CHANGELOG.md`](CHANGELOG.md).
+
 ## Your data
 
 Everything personal is kept out of version control by `.gitignore`:
@@ -71,8 +93,9 @@ app/
   db.py                # SQLite schema + access layer
   version.py           # single source of truth for module versions
   import_numbers.example.py  # template importer (copy -> import_numbers.py)
-  api/                 # backend HTTP API (accounts, snapshots, ledgers, ...)
+  api/                 # backend HTTP API (accounts, snapshots, ledgers, export, ...)
   static/              # single-page frontend (vanilla JS, no build step)
+mcp/                   # read-only MCP server for AI analysis (see mcp/README.md)
 launcher/              # macOS .app icon + generator
 build-app.sh           # package PFi.app
 run.sh / run-lan.sh / shutdown.sh
