@@ -10,6 +10,29 @@ versions it changed.
 
 ## [Unreleased]
 
+## [1.23.1] - 2026-10-01
+
+### Fixed
+
+- **The PFi app icon didn't start PFi on macOS 26.** Opening `PFi.app` just
+  showed "Safari can't connect to the server": the launcher used the system
+  `/usr/bin/python3`, and on macOS 26 that Command Line Tools shim fails with
+  `posix_spawn ... Undefined error: 0` when it's started from an app (it still
+  works in Terminal, which hid the problem). The launcher now test-runs the
+  available Pythons and uses the first that works, preferring a standalone
+  install (python.org or Homebrew) over the system one.
+- **Launch failures are no longer silent.** If no working Python is found, or
+  the server doesn't come up, the app now shows an alert with the last log line
+  instead of opening the browser to a dead page.
+- `build-app.sh` reads the version with `sed` instead of Python, so the in-app
+  Update button can rebuild the app on macOS 26 too.
+
+**If your PFi.app is already broken:** the Update button can't reach you, so
+rebuild it once from your checkout with `./build-app.sh` (macOS 26 also needs
+Python 3 from [python.org](https://www.python.org/downloads/macos/) or Homebrew).
+
+Modules: app 1.23.0 → 1.23.1.
+
 ## [1.23.0] - 2026-09-12
 
 ### Added
@@ -90,7 +113,8 @@ versions it changed.
 
 - `app` 1.20.0, `db` 1.7.0, `api` 1.10.1, `ui` 1.19.1, `importer` 1.0.0
 
-[Unreleased]: https://github.com/nliran/PFi/compare/v1.23.0...HEAD
+[Unreleased]: https://github.com/nliran/PFi/compare/v1.23.1...HEAD
+[1.23.1]: https://github.com/nliran/PFi/compare/v1.23.0...v1.23.1
 [1.23.0]: https://github.com/nliran/PFi/compare/v1.22.0...v1.23.0
 [1.22.0]: https://github.com/nliran/PFi/compare/v1.21.1...v1.22.0
 [1.21.1]: https://github.com/nliran/PFi/compare/v1.21.0...v1.21.1
