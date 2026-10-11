@@ -10,6 +10,36 @@ versions it changed.
 
 ## [Unreleased]
 
+## [1.23.1] - 2026-10-11
+
+### Fixed
+
+- **On Apple Silicon Macs, `PFi.app` ran under Rosetta (Intel emulation).**
+  The app's launcher is a shell script, so macOS couldn't tell it was Apple
+  Silicon-ready and started it as an Intel process — and the Python server it
+  started inherited that. Symptoms: macOS warns that support for Intel-based
+  apps is ending, and on Macs where the only Python is the system one (the
+  Command Line Tools 3.9, which is Apple Silicon-only), the server couldn't
+  start at all (`posix_spawn ... Undefined error: 0` in the log; the browser
+  showed "can't connect to the server"). The app now declares Apple Silicon
+  support (`LSArchitecturePriority` in `Info.plist`), and the launcher
+  re-launches itself natively if macOS still starts it under Rosetta.
+- **The launcher picks a Python that actually starts.** It test-runs the
+  installed Pythons and uses the first that works, preferring a standalone
+  install (python.org or Homebrew) over the old system 3.9.
+- **Launch failures are no longer silent.** If no working Python is found, or
+  the server doesn't come up, the app shows an alert with the last log line
+  instead of opening the browser to a dead page.
+- `build-app.sh` reads the version with `sed`, so building needs no Python.
+
+**After updating:** quit PFi (the power button) and open it again from the
+icon. An update restarts the server in place, so it keeps running the way it
+was started until the next launch from the icon. **If your PFi.app won't start
+at all,** the Update button can't reach you; rebuild it once from your checkout
+with `./build-app.sh`.
+
+Modules: app 1.23.0 → 1.23.1.
+
 ## [1.23.0] - 2026-09-12
 
 ### Added
@@ -90,7 +120,8 @@ versions it changed.
 
 - `app` 1.20.0, `db` 1.7.0, `api` 1.10.1, `ui` 1.19.1, `importer` 1.0.0
 
-[Unreleased]: https://github.com/nliran/PFi/compare/v1.23.0...HEAD
+[Unreleased]: https://github.com/nliran/PFi/compare/v1.23.1...HEAD
+[1.23.1]: https://github.com/nliran/PFi/compare/v1.23.0...v1.23.1
 [1.23.0]: https://github.com/nliran/PFi/compare/v1.22.0...v1.23.0
 [1.22.0]: https://github.com/nliran/PFi/compare/v1.21.1...v1.22.0
 [1.21.1]: https://github.com/nliran/PFi/compare/v1.21.0...v1.21.1

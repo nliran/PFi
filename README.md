@@ -25,8 +25,9 @@ cd PFi
 browser. On first run it creates an empty database at
 `~/Library/Application Support/PFi/pfi.db`. Stop the server with `Ctrl-C`.
 
-Requires **Python 3** (the version that ships with macOS is fine). No `pip
-install` is needed to run the app.
+Requires **Python 3** (the version that ships with macOS works; the `PFi.app`
+icon prefers a newer one from [python.org](https://www.python.org/downloads/macos/)
+or Homebrew when it's installed). No `pip install` is needed to run the app.
 
 Other entry points:
 
