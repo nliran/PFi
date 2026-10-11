@@ -23,9 +23,8 @@ for arg in "$@"; do
   esac
 done
 
-# Read the version with sed, not Python: this script also runs from inside the
-# app (self-update rebuild), where the system python3 can't start (see the
-# launcher below).
+# Read the version with sed, not Python, so building needs no particular
+# Python to be installed or startable.
 VERSION="$(sed -nE 's/^APP_VERSION = "([^"]+)".*/\1/p' app/version.py)"
 if [ -z "$VERSION" ]; then
   echo "ERROR: couldn't read APP_VERSION from app/version.py" >&2
@@ -74,6 +73,11 @@ cat > "$TARGET/Contents/Info.plist" <<PLIST
 	<string>10.13</string>
 	<key>LSUIElement</key>
 	<true/>
+	<key>LSArchitecturePriority</key>
+	<array>
+		<string>arm64</string>
+		<string>x86_64</string>
+	</array>
 	<key>NSHighResolutionCapable</key>
 	<true/>
 </dict>
@@ -87,6 +91,15 @@ cat > "$TARGET/Contents/MacOS/PFi" <<'LAUNCH'
 # ~/Library/Application Support/PFi. Relocatable: everything is resolved from
 # the bundle's own path, so the .app works wherever you move it.
 export PATH="/usr/bin:/bin:/usr/sbin:/sbin"
+
+# Run natively on Apple Silicon. This executable is a script, so macOS can't see
+# that it's Apple Silicon-ready and may start it under Rosetta (Intel
+# emulation) — and everything it starts, Python included, inherits that. The
+# LSArchitecturePriority key in Info.plist asks for arm64; this guard covers a
+# stale LaunchServices registration (e.g. right after an in-place rebuild).
+if [ "$(sysctl -n sysctl.proc_translated 2>/dev/null)" = "1" ]; then
+  exec /usr/bin/arch -arm64 /bin/bash "$0" "$@"
+fi
 
 APP_CODE="$(cd "$(dirname "$0")/../Resources/app" 2>/dev/null && pwd || true)"
 PORT="${PFI_PORT:-8765}"
@@ -110,11 +123,9 @@ if [ -z "$APP_CODE" ] || [ ! -f "$APP_CODE/server.py" ]; then
   exit 1
 fi
 
-# Pick a Python that actually runs when launched from an app. On macOS 26 the
-# Command Line Tools shim (/usr/bin/python3) fails with "posix_spawn ...
-# Undefined error: 0" under LaunchServices, even though it works in Terminal —
-# so prefer a standalone install, keep the system one as a last resort, and
-# test-run each candidate rather than trusting that it exists.
+# Pick a Python that actually starts. Prefer a standalone install (the system
+# /usr/bin/python3 is the old Command Line Tools 3.9), keep the system one as a
+# last resort, and test-run each candidate rather than trusting that it exists.
 PY=""
 for cand in /usr/local/bin/python3 /opt/homebrew/bin/python3 \
             /Library/Frameworks/Python.framework/Versions/Current/bin/python3 \
